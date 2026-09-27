@@ -1,101 +1,175 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Collapse, Icon } from "@blueprintjs/core";
+import { useView } from "@/lib/api";
+import { ErrorState, LoadingState } from "@/components/ui/layout";
+import { Time } from "@/components/ui/content";
+import { AskComposer } from "@/components/home/ask-composer";
+import { useShell } from "@/components/shell/shell-context";
+import { CreateCaseDialog, CreateDocumentDialog } from "@/components/home/create-dialogs";
+import { RequestPanel } from "@/components/requests/request-panel";
+import type { RequestSummary } from "@/components/requests/request-row";
+import { cn } from "@/lib/utils";
+
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Suspense fallback={<LoadingState />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+function HomeContent() {
+  const q = useView("home");
+  const shell = useShell();
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [creating, setCreating] = useState(false);
+  const [inboxOpen, setInboxOpen] = useState(true);
+
+  const requested = params.get("create");
+  const selected = params.get("request");
+
+  const [openingCase, setOpeningCase] = useState(false);
+
+  useEffect(() => {
+    if (requested === "document") setCreating(true);
+    if (requested === "case") setOpeningCase(true);
+  }, [requested]);
+
+  const setRequest = useCallback(
+    (id: string | null) => {
+      const sp = new URLSearchParams(params.toString());
+      if (id) sp.set("request", id);
+      else sp.delete("request");
+      const s = sp.toString();
+      router.replace(s ? `${pathname}?${s}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
+
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setRequest(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected, setRequest]);
+
+  const close = () => {
+    setCreating(false);
+    setOpeningCase(false);
+    if (requested) router.replace(pathname);
+  };
+
+  const dialogs = (
+    <>
+      <CreateDocumentDialog isOpen={creating} onClose={close} />
+      <CreateCaseDialog isOpen={openingCase} onClose={close} />
+    </>
+  );
+  const firstName = shell?.me.full_name.split(" ")[0];
+
+  return (
+    <div className="mx-auto max-w-[680px] space-y-8 pt-2 md:pt-4">
+      <section aria-labelledby="home-heading" className="space-y-6">
+        <h1 id="home-heading" className="font-display text-4xl leading-tight md:text-[40px]">
+          {greeting()}
+          {firstName ? `, ${firstName}` : ""}.
+        </h1>
+        <AskComposer />
+      </section>
+
+      {q.isPending ? (
+        <LoadingState />
+      ) : q.isError ? (
+        <ErrorState error={q.error} onRetry={() => q.refetch()} />
+      ) : (
+        <section aria-labelledby="inbox-heading" className="space-y-3">
+          <button
+            type="button"
+            id="inbox-heading"
+            onClick={() => setInboxOpen((v) => !v)}
+            aria-expanded={inboxOpen}
+            aria-controls="home-inbox"
+            className="inline-flex items-center gap-2 rounded-md px-0.5 text-[15px] text-muted-foreground hover:text-foreground"
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+            <Icon icon={inboxOpen ? "chevron-down" : "chevron-right"} size={14} aria-hidden />
+            Inbox ({q.data.needs_total})
+          </button>
+          <Collapse isOpen={inboxOpen} keepChildrenMounted>
+            <div id="home-inbox">
+              {q.data.needs.length === 0 ? (
+                <p className="rounded-2xl border border-dashed px-5 py-6 text-sm text-muted-foreground">Nothing needs your response right now.</p>
+              ) : (
+                <ul className="space-y-2.5" aria-label="Requests that need your response">
+                  {q.data.needs.map((r) => (
+                    <InboxCard key={r.id} item={r} selected={r.id === selected} onSelect={setRequest} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Collapse>
+        </section>
+      )}
+
+      {selected && (
+        <aside
+          aria-label="Selected request"
+          className="fixed inset-y-2 left-2 right-2 z-50 overflow-y-auto rounded-[28px] border bg-card p-6 shadow-[0_24px_60px_-16px_rgb(28_26_24/0.22)] animate-in slide-in-from-right-4 fade-in-0 duration-200 sm:left-auto sm:w-[min(460px,calc(100vw-1rem))]"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <RequestPanel requestId={selected} onClose={() => setRequest(null)} />
+        </aside>
+      )}
+      {dialogs}
     </div>
   );
+}
+
+const KIND_CHIP: Record<string, { label: string; tone: string }> = {
+  authorization: { label: "Action authorization", tone: "bg-muted text-muted-foreground" },
+  task: { label: "Task approval", tone: "bg-muted text-muted-foreground" },
+  information: { label: "Information", tone: "bg-progress-soft text-progress" },
+  review: { label: "Output review", tone: "bg-brand/10 text-brand-strong" },
+};
+
+function InboxCard({ item, selected, onSelect }: { item: RequestSummary; selected: boolean; onSelect: (id: string) => void }) {
+  const chip = KIND_CHIP[item.kind] ?? { label: item.kind, tone: "bg-muted text-muted-foreground" };
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(item.id)}
+        aria-current={selected ? "true" : undefined}
+        className={cn(
+          "flex w-full flex-col gap-1.5 rounded-2xl border bg-card px-4 py-3.5 text-left shadow-[0_1px_3px_rgb(28_26_24/0.04)] transition-colors hover:border-input focus-visible:border-input focus-visible:outline-none",
+          selected && "border-input ring-1 ring-input",
+        )}
+      >
+        <span className="flex items-start justify-between gap-3">
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-[12px] leading-4", chip.tone)}>{chip.label}</span>
+            <span className="min-w-0 text-[15px] font-medium leading-snug text-foreground">{item.subject}</span>
+          </span>
+          {item.status === "Open" && (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand/10 px-2 py-0.5 text-[12px] font-medium text-brand-strong">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-strong" aria-hidden />
+              pending
+            </span>
+          )}
+        </span>
+        <span className="line-clamp-1 text-sm text-foreground/80">{item.question}</span>
+        <span className="text-xs text-muted-foreground">
+          {item.requester} · <Time iso={item.created_at} />
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }

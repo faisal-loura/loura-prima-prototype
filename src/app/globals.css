@@ -2,26 +2,541 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+/*
+ * Loura design language (after Juno's research UI, light theme): a warm
+ * off-white workspace with white cards, near-black text, hairline borders, and
+ * one coral accent for what needs attention. Serif display headings, DM Sans for
+ * the interface, DM Mono for technical labels. Colors are RGB channels (see
+ * tailwind.config.ts).
+ */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    --background: 246 246 244;
+    --surface: 255 255 255;
+    --foreground: 28 26 24;
+    --card: 255 255 255;
+    --card-foreground: 28 26 24;
+    --popover: 255 255 255;
+    --popover-foreground: 28 26 24;
+    --primary: 255 119 89;
+    --primary-foreground: 28 26 24;
+    --secondary: 236 236 233;
+    --secondary-foreground: 28 26 24;
+    --muted: 243 243 241;
+    --muted-foreground: 99 97 93;
+    --accent: 238 238 235;
+    --accent-foreground: 28 26 24;
+    --destructive: 185 28 28;
+    --destructive-foreground: 255 255 255;
+    --border: 229 229 225;
+    --input: 214 213 209;
+    --ring: 255 119 89;
+    --ink: 28 26 24;
+    --brand: 255 119 89;
+    --brand-strong: 196 70 42;
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+    --ready: 21 128 61;
+    --ready-soft: 236 250 241;
+    --risk: 180 83 9;
+    --risk-soft: 255 246 228;
+    --blocked: 185 28 28;
+    --blocked-soft: 254 240 240;
+    --unknown: 82 82 91;
+    --unknown-soft: 244 244 245;
+    --progress: 29 78 137;
+    --progress-soft: 236 243 251;
+
+    --radius: 0.75rem;
+    color-scheme: light;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background: rgb(var(--brand) / 0.35);
+  }
+
+  /* Links take their surrounding text color (Blueprint paints them blue). */
+  a,
+  a:hover {
+    color: inherit;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Display headings: Instrument Serif, as in Juno's hero type. */
+  .font-display {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  /* Frosted composer surface. */
+  .glass {
+    background: rgb(var(--card) / 0.8);
+    backdrop-filter: blur(40px) saturate(1.6);
+    -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  }
+}
+
+/*
+ * Blueprint, wearing Loura's clothes.
+ *
+ * Blueprint 6 exposes its whole design system as CSS custom properties, so the
+ * components below are stock Blueprint — only the tokens are ours. Loura's own
+ * variables are RGB channel triplets (so Tailwind's `/50` opacity modifiers
+ * work), hence the rgb() wrappers.
+ */
+@layer base {
+  :root {
+    /* Type ------------------------------------------------------------- */
+    --bp-typography-family-default: var(--font-sans), system-ui, sans-serif;
+    --bp-typography-family-mono: var(--font-mono), ui-monospace, monospace;
+    --bp-typography-color-default-rest: rgb(var(--foreground));
+    --bp-typography-color-default-hover: rgb(var(--foreground));
+    --bp-typography-color-default-active: rgb(var(--foreground));
+    --bp-typography-color-muted: rgb(var(--muted-foreground));
+    --bp-typography-color-danger-rest: rgb(var(--blocked));
+    --bp-typography-color-success-rest: rgb(var(--ready));
+    --bp-typography-color-warning-rest: rgb(var(--risk));
+
+    /* Surfaces --------------------------------------------------------- */
+    --bp-surface-border-radius: calc(var(--radius) - 4px);
+    --bp-surface-border-color-default: rgb(var(--border));
+    --bp-surface-border-color-strong: rgb(var(--input));
+    --bp-surface-background-color-default-rest: rgb(var(--card));
+    --bp-surface-background-color-default-hover: rgb(var(--accent));
+    --bp-surface-background-color-default-active: rgb(var(--secondary));
+
+    /* Coral is the primary intent, as Juno leads with its orange. ------ */
+    --bp-intent-primary-rest: rgb(var(--brand));
+    --bp-intent-primary-hover: rgb(var(--brand-strong));
+    --bp-intent-primary-active: rgb(var(--brand) / 0.85);
+    --bp-intent-primary-disabled: rgb(var(--brand) / 0.35);
+    --bp-intent-primary-foreground: rgb(var(--ink));
+    --bp-surface-background-color-primary-rest: rgb(var(--brand));
+    --bp-surface-background-color-primary-hover: rgb(var(--brand-strong));
+    --bp-surface-background-color-primary-active: rgb(var(--brand) / 0.85);
+    --bp-typography-color-primary-rest: rgb(var(--brand-strong));
+
+    /* Semantic intents map to the shared state tones. ------------------ */
+    --bp-intent-danger-rest: rgb(var(--blocked));
+    --bp-intent-danger-hover: rgb(var(--blocked) / 0.9);
+    --bp-intent-danger-active: rgb(var(--blocked) / 0.8);
+    --bp-intent-danger-foreground: rgb(255 255 255);
+    --bp-surface-background-color-danger-rest: rgb(var(--blocked-soft));
+
+    --bp-intent-success-rest: rgb(var(--ready));
+    --bp-intent-success-hover: rgb(var(--ready) / 0.9);
+    --bp-intent-success-active: rgb(var(--ready) / 0.8);
+    --bp-intent-success-foreground: rgb(255 255 255);
+    --bp-surface-background-color-success-rest: rgb(var(--ready-soft));
+
+    --bp-intent-warning-rest: rgb(var(--risk));
+    --bp-intent-warning-hover: rgb(var(--risk) / 0.9);
+    --bp-intent-warning-active: rgb(var(--risk) / 0.8);
+    --bp-intent-warning-foreground: rgb(255 255 255);
+    --bp-surface-background-color-warning-rest: rgb(var(--risk-soft));
+
+    /* Focus rings use the coral accent. -------------------------------- */
+    --bp-emphasis-focus-color: rgb(var(--brand));
+    --bp-emphasis-focus-width: 2px;
+    --bp-emphasis-focus-offset: 1px;
+
+    /* Hairlines and soft depth. -------------------------------------- */
+    --bp-surface-shadow-0: inset 0 0 0 1px rgb(var(--border));
+    --bp-surface-shadow-1: inset 0 0 0 1px rgb(var(--border)), 0 1px 2px 0 rgb(28 26 24 / 0.04);
+    --bp-surface-shadow-2: inset 0 0 0 1px rgb(var(--border)), 0 8px 24px -8px rgb(28 26 24 / 0.12);
+    --bp-surface-shadow-3: inset 0 0 0 1px rgb(var(--border)), 0 16px 32px -10px rgb(28 26 24 / 0.14);
+    --bp-surface-shadow-4: inset 0 0 0 1px rgb(var(--border)), 0 24px 60px -16px rgb(28 26 24 / 0.2);
+  }
+
+  /* Blueprint sets its own page background and font on <body>. */
+  body {
+    background-color: rgb(var(--background));
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+
+}
+
+/* Same reason as the tag rules below: these target Blueprint's runtime classes,
+   so they must sit outside any Tailwind layer to survive tree-shaking. */
+
+/* Blueprint headings carry their own weight/tracking; Loura's are lighter. */
+.bp6-heading {
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: rgb(var(--foreground));
+}
+
+/* Cards get the full Loura radius; controls keep the tighter one. */
+.bp6-card {
+  border-radius: var(--radius);
+}
+
+/*
+ * Status pills. One geometry for every state vocabulary (task, request, review,
+ * assignment, run, action). Tone carries meaning; the label always states it in
+ * words, so colour is never the only signal. Outside Tailwind layers because
+ * `bp6-tag` is emitted by Blueprint at runtime.
+ */
+.bp6-tag[data-pill] {
+  margin: 0;
+  gap: 5px;
+  min-height: 0;
+  font-weight: 500;
+  box-shadow: none;
+  border-radius: calc(var(--radius) - 6px);
+  padding: 2px 8px;
+  font-size: 11.5px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.bp6-tag[data-pill] .bp6-icon {
+  margin: 0;
+  color: currentColor;
+  fill: currentColor;
+}
+.bp6-tag.bp6-minimal[data-tone="neutral"] {
+  background-color: rgb(var(--card));
+  color: rgb(var(--foreground));
+  box-shadow: inset 0 0 0 1px rgb(var(--border));
+}
+.bp6-tag.bp6-minimal[data-tone="muted"] {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
+  box-shadow: inset 0 0 0 1px rgb(var(--border));
+}
+.bp6-tag.bp6-minimal[data-tone="strong"] {
+  background-color: rgb(var(--foreground));
+  color: rgb(var(--ink));
+}
+.bp6-tag.bp6-minimal[data-tone="progress"] {
+  background-color: rgb(var(--progress-soft));
+  color: rgb(var(--progress));
+  box-shadow: inset 0 0 0 1px rgb(var(--progress) / 0.25);
+}
+.bp6-tag.bp6-minimal[data-tone="ok"] {
+  background-color: rgb(var(--ready-soft));
+  color: rgb(var(--ready));
+  box-shadow: inset 0 0 0 1px rgb(var(--ready) / 0.25);
+}
+.bp6-tag.bp6-minimal[data-tone="warn"] {
+  background-color: rgb(var(--risk-soft));
+  color: rgb(var(--risk));
+  box-shadow: inset 0 0 0 1px rgb(var(--risk) / 0.3);
+}
+.bp6-tag.bp6-minimal[data-tone="danger"] {
+  background-color: rgb(var(--blocked-soft));
+  color: rgb(var(--blocked));
+  box-shadow: inset 0 0 0 1px rgb(var(--blocked) / 0.3);
+}
+/* Unknown / uncertain / pending: dashed, so it is never read as a settled state. */
+.bp6-tag.bp6-minimal[data-tone="pending"] {
+  background-color: rgb(var(--unknown-soft));
+  color: rgb(var(--unknown));
+  box-shadow: none;
+  border: 1px dashed rgb(var(--unknown) / 0.55);
+}
+.bp6-tag.bp6-minimal[data-tone="agent"] {
+  background-color: rgb(var(--brand) / 0.1);
+  color: rgb(var(--brand-strong));
+  box-shadow: inset 0 0 0 1px rgb(var(--brand) / 0.35);
+}
+
+/* Urgent: something is waiting on a person. Solid Loura coral, never used for plain status. */
+.bp6-tag.bp6-minimal[data-tone="urgent"] {
+  background-color: rgb(var(--brand));
+  color: rgb(var(--ink));
+}
+
+/* Brand scope for emphasis areas (blockers, approvals). */
+.brand-intent {
+  /* Coral is already the primary intent; kept so emphasis areas stay explicit. */
+  --bp-intent-primary-rest: rgb(var(--brand));
+}
+
+/* Rendered Markdown in documents, messages, and assessments. */
+.prose-loura {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgb(var(--foreground));
+}
+.prose-loura > * + * {
+  margin-top: 0.75em;
+}
+.prose-loura h1,
+.prose-loura h2,
+.prose-loura h3 {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-top: 1.25em;
+}
+.prose-loura h1 { font-size: 20px; }
+.prose-loura h2 { font-size: 16px; }
+.prose-loura h3 { font-size: 14px; }
+.prose-loura > :first-child { margin-top: 0; }
+.prose-loura ul { list-style: disc; padding-left: 1.25em; }
+.prose-loura ol { list-style: decimal; padding-left: 1.25em; }
+.prose-loura li + li { margin-top: 0.2em; }
+.prose-loura strong { font-weight: 600; }
+.prose-loura em { font-style: italic; }
+.prose-loura code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  background: rgb(var(--muted));
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.prose-loura table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+}
+.prose-loura th,
+.prose-loura td {
+  border: 1px solid rgb(var(--border));
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-loura th {
+  background: rgb(var(--muted) / 0.6);
+  font-weight: 500;
+}
+.prose-loura hr {
+  border: 0;
+  border-top: 1px solid rgb(var(--border));
+}
+
+/* Changed section in a version comparison. */
+.diff-added { background: rgb(var(--ready-soft)); box-shadow: inset 3px 0 0 rgb(var(--ready)); }
+.diff-removed { background: rgb(var(--blocked-soft)); box-shadow: inset 3px 0 0 rgb(var(--blocked)); text-decoration: line-through; text-decoration-color: rgb(var(--blocked) / 0.4); }
+
+/*
+ * Tables. Blueprint's default cell padding is 11px all round; Loura's grid is
+ * 16px across and 12px down, matching the 20px card padding one step in.
+ */
+table.bp6-html-table th,
+table.bp6-html-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+table.bp6-html-table th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: rgb(var(--muted) / 0.4);
+  border-bottom: 1px solid rgb(var(--border));
+}
+table.bp6-html-table tbody tr td {
+  box-shadow: none;
+  border-top: 1px solid rgb(var(--border));
+}
+table.bp6-html-table tbody tr:first-child td {
+  border-top: none;
+}
+
+/*
+ * Blueprint spaces menu items tighter than Loura's lists; and a menu inside a
+ * popover needs breathing room against the popover edge.
+ */
+.bp6-menu {
+  padding: 6px;
+}
+.bp6-menu-item {
+  padding: 6px 8px;
+  border-radius: calc(var(--radius) - 6px);
+}
+.bp6-popover .bp6-popover-content {
+  border-radius: calc(var(--radius) - 4px);
+}
+
+/*
+ * Tabs take Loura's brand orange instead of Blueprint blue, and each tab gets
+ * its own horizontal padding so the underline reaches past the label.
+ */
+.bp6-tab-list {
+  column-gap: 4px;
+}
+.bp6-tab {
+  padding: 4px 12px;
+}
+.bp6-tab[aria-selected="true"] {
+  box-shadow: inset 0 -3px 0 rgb(var(--brand));
+}
+.bp6-tab[aria-selected="true"],
+.bp6-tab:not([aria-disabled="true"]):hover {
+  color: rgb(var(--brand));
+}
+.bp6-tab-indicator-wrapper .bp6-tab-indicator {
+  background-color: rgb(var(--brand));
+}
+
+/* Callouts carry the same inner padding as cards, one step down. */
+.bp6-callout {
+  padding: 14px 16px;
+}
+
+/* Form rows: Blueprint's default bottom margin is tighter than Loura's rhythm. */
+.bp6-form-group {
+  margin-bottom: 16px;
+}
+
+/*
+ * Blueprint paints active states in blue. Repaint the pieces Loura uses with warm
+ * surfaces and the coral accent. Outside Tailwind layers because these are
+ * Blueprint runtime classes.
+ */
+.bp6-dialog,
+.bp6-drawer {
+  background: rgb(var(--card));
+  color: rgb(var(--foreground));
+  box-shadow: inset 0 0 0 1px rgb(var(--border)), 0 24px 60px -16px rgb(28 26 24 / 0.22);
+}
+.bp6-dialog-header,
+.bp6-drawer-header {
+  background: rgb(var(--card));
+  box-shadow: inset 0 -1px 0 rgb(var(--border));
+}
+.bp6-dialog-footer-fixed {
+  background: rgb(var(--card));
+  border-top: 1px solid rgb(var(--border));
+}
+.bp6-overlay-backdrop {
+  background-color: rgb(28 26 24 / 0.35);
+  backdrop-filter: blur(2px);
+}
+.bp6-popover-content,
+.bp6-popover .bp6-popover-content,
+.bp6-menu {
+  background: rgb(var(--popover));
+  color: rgb(var(--foreground));
+}
+.bp6-popover {
+  box-shadow: inset 0 0 0 1px rgb(var(--border)), 0 16px 40px -12px rgb(28 26 24 / 0.18);
+  border-radius: 10px;
+}
+.bp6-popover .bp6-popover-arrow-fill {
+  fill: rgb(var(--popover));
+}
+.bp6-menu-item:hover,
+.bp6-menu-item.bp6-selected {
+  background-color: rgb(var(--accent));
+}
+.bp6-menu-item.bp6-active,
+.bp6-menu-item.bp6-intent-primary {
+  color: rgb(var(--brand-strong));
+}
+.bp6-menu-item .bp6-menu-item-label,
+.bp6-menu-item .bp6-menu-item-icon,
+.bp6-menu-item::before {
+  color: rgb(var(--muted-foreground));
+}
+.bp6-tab {
+  color: rgb(var(--muted-foreground));
+}
+.bp6-tab[aria-selected="true"],
+.bp6-tab:not([aria-disabled="true"]):hover {
+  color: rgb(var(--foreground));
+}
+.bp6-tab-indicator {
+  background-color: rgb(var(--brand)) !important;
+}
+.bp6-tab-list .bp6-tag {
+  background: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
+}
+.bp6-input,
+textarea.bp6-input,
+.bp6-html-select select,
+.bp6-select select {
+  background-color: rgb(var(--card));
+  color: rgb(var(--foreground));
+  box-shadow: inset 0 0 0 1px rgb(var(--input));
+}
+.bp6-input:focus,
+.bp6-input.bp6-active,
+.bp6-html-select select:focus {
+  box-shadow: inset 0 0 0 1px rgb(var(--brand) / 0.7), 0 0 0 3px rgb(var(--brand) / 0.18);
+}
+.bp6-input::placeholder {
+  color: rgb(var(--muted-foreground) / 0.8);
+}
+.bp6-html-select option,
+.bp6-select option {
+  background-color: rgb(var(--popover));
+  color: rgb(var(--foreground));
+}
+.bp6-segmented-control {
+  background: rgb(var(--muted));
+}
+.bp6-segmented-control > .bp6-button:not(.bp6-minimal):not(.bp6-intent-primary) {
+  background-color: rgb(var(--secondary));
+}
+.bp6-control input:checked ~ .bp6-control-indicator,
+.bp6-control.bp6-switch input:checked ~ .bp6-control-indicator,
+.bp6-control:hover input:checked ~ .bp6-control-indicator,
+.bp6-control.bp6-switch:hover input:checked ~ .bp6-control-indicator {
+  background: rgb(var(--brand));
+  color: rgb(var(--ink));
+}
+.bp6-button:not([class*="bp6-intent-"]):not(.bp6-minimal):not(.bp6-outlined) {
+  background-color: rgb(var(--secondary));
+  box-shadow: inset 0 0 0 1px rgb(var(--input));
+  color: rgb(var(--foreground));
+}
+.bp6-button:not([class*="bp6-intent-"]):not(.bp6-minimal):not(.bp6-outlined):hover {
+  background-color: rgb(var(--accent));
+}
+.bp6-button.bp6-outlined:not([class*="bp6-intent-"]) {
+  border-color: rgb(var(--input));
+  color: rgb(var(--foreground));
+}
+.bp6-button.bp6-minimal:not([class*="bp6-intent-"]):hover,
+.bp6-button.bp6-outlined:not([class*="bp6-intent-"]):hover {
+  background-color: rgb(var(--accent));
+}
+.bp6-button.bp6-intent-primary {
+  color: rgb(var(--ink));
+  font-weight: 500;
+}
+.bp6-button.bp6-intent-primary .bp6-icon {
+  color: rgb(var(--ink));
+}
+.bp6-callout {
+  background-color: rgb(var(--muted));
+}
+.bp6-callout.bp6-intent-primary {
+  background-color: rgb(var(--brand) / 0.1);
+  color: rgb(var(--foreground));
+}
+.bp6-callout.bp6-intent-primary > .bp6-icon:first-child,
+.bp6-callout.bp6-intent-primary .bp6-heading {
+  color: rgb(var(--brand-strong));
+}
+.bp6-editable-text:hover::before {
+  box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent, inset 0 0 0 1px rgb(var(--input));
+}
+.bp6-card {
+  background-color: rgb(var(--card));
+  box-shadow: inset 0 0 0 1px rgb(var(--border));
 }
